@@ -2,29 +2,29 @@
 
 package com.lightcrafts.image.metadata;
 
-import java.awt.color.ICC_Profile;
-import java.awt.*;
-import java.io.File;
-import java.util.*;
-
-import org.w3c.dom.Element;
-import org.w3c.dom.Document;
-
 import com.lightcrafts.image.ImageInfo;
-import com.lightcrafts.image.metadata.values.*;
+import com.lightcrafts.image.color.ColorProfileInfo;
 import com.lightcrafts.image.metadata.providers.*;
+import com.lightcrafts.image.metadata.values.*;
 import com.lightcrafts.image.types.AuxiliaryImageInfo;
 import com.lightcrafts.image.types.ImageType;
 import com.lightcrafts.image.types.RawImageInfo;
-import com.lightcrafts.image.color.ColorProfileInfo;
 import com.lightcrafts.utils.DCRaw;
 import com.lightcrafts.utils.TextUtil;
 import com.lightcrafts.utils.Version;
 import com.lightcrafts.utils.xml.XMLUtil;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import java.awt.*;
+import java.awt.color.ICC_Profile;
+import java.io.File;
+import java.util.*;
 
 import static com.lightcrafts.image.metadata.CoreTags.*;
 import static com.lightcrafts.image.metadata.ImageMetaType.*;
-import static com.lightcrafts.image.metadata.ImageOrientation.*;
+import static com.lightcrafts.image.metadata.ImageOrientation.ORIENTATION_LANDSCAPE;
+import static com.lightcrafts.image.metadata.ImageOrientation.ORIENTATION_UNKNOWN;
 import static com.lightcrafts.image.metadata.XMPConstants.*;
 
 /**
@@ -50,10 +50,7 @@ public final class CoreDirectory extends ImageMetadataDirectory implements
      */
     public static void addMetadata( ImageInfo imageInfo ) {
         final ImageMetadata metadata = imageInfo.getCurrentMetadata();
-        final CoreDirectory dir =
-            (CoreDirectory)metadata.getDirectoryFor(
-                CoreDirectory.class, true
-            );
+        final CoreDirectory dir = metadata.getDirectoryFor(CoreDirectory.class, true);
         dir.addAperture( metadata );
         dir.addCamera( imageInfo );
         dir.addCaptureDateTime( imageInfo );
@@ -79,8 +76,7 @@ public final class CoreDirectory extends ImageMetadataDirectory implements
      * @param metadata The {@link ImageMetadata} to synchronize.
      */
     public static void syncEditableMetadata( ImageMetadata metadata ) {
-        final CoreDirectory dir = (CoreDirectory)
-            metadata.getDirectoryFor( CoreDirectory.class, true );
+        final CoreDirectory dir = metadata.getDirectoryFor(CoreDirectory.class, true);
         dir.addArtist( metadata );
         dir.addCaption( metadata );
         dir.addCopyright( metadata );
@@ -94,8 +90,7 @@ public final class CoreDirectory extends ImageMetadataDirectory implements
      * @param metadata The {@link ImageMetadata} to synchronize.
      */
     public static void syncImageDimensions( ImageMetadata metadata ) {
-        final CoreDirectory dir = (CoreDirectory)
-            metadata.getDirectoryFor( CoreDirectory.class, true );
+        final CoreDirectory dir = metadata.getDirectoryFor(CoreDirectory.class, true);
         dir.removeValue( CORE_IMAGE_WIDTH );
         dir.removeValue( CORE_IMAGE_HEIGHT );
         final int width = metadata.getImageWidth();
@@ -119,10 +114,7 @@ public final class CoreDirectory extends ImageMetadataDirectory implements
      */
     public static void addOriginalOrientation( ImageInfo imageInfo ) {
         final ImageMetadata metadata = imageInfo.getCurrentMetadata();
-        final CoreDirectory dir =
-            (CoreDirectory)metadata.getDirectoryFor(
-                CoreDirectory.class, true
-            );
+        final CoreDirectory dir = metadata.getDirectoryFor(CoreDirectory.class, true);
         final ImageOrientation orientation = getOrientationFrom( metadata );
         dir.putValue(
             CORE_ORIGINAL_ORIENTATION,
