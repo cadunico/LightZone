@@ -3,7 +3,7 @@
 package com.lightcrafts.jai.opimage;
 
 import com.lightcrafts.jai.utils.Functions;
-import com.lightcrafts.utils.DCRaw;
+import com.lightcrafts.utils.DCRawNative;
 
 import javax.media.jai.AreaOpImage;
 import javax.media.jai.BorderExtender;
@@ -128,7 +128,7 @@ public class RGBDemosaicOpImage extends AreaOpImage {
         int dWidth = dst.getWidth();
         int dHeight = dst.getHeight();
 
-        DCRaw.interpolateGreen(srcData, destData, dWidth, dHeight, srcScanlineStride, dstScanlineStride, srcOffset, rOffset, gOffset, bOffset, gx, gy, ry );
-        DCRaw.interpolateRedBlue(destData, dWidth, dHeight, dstScanlineStride, rOffset, gOffset, bOffset, rx, ry, bx, by );
+        DCRawNative.interpolateGreen(srcData, destData, dWidth, dHeight, srcScanlineStride, dstScanlineStride, srcOffset, rOffset, gOffset, bOffset, gx, gy, ry );
+        DCRawNative.interpolateRedBlue(destData, dWidth, dHeight, dstScanlineStride, rOffset, gOffset, bOffset, rx, ry, bx, by );
     }
 }

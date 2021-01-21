@@ -8,7 +8,7 @@
 #include <omp.h>
 #include <jni.h>
 #ifndef AUTO_DEP
-#include "javah/com_lightcrafts_utils_Lensfun.h"
+#include "javah/com_lightcrafts_utils_LensfunNative.h"
 #endif
 
 #include "LC_JNIUtils.h"
@@ -49,8 +49,8 @@ inline jobjectArray createJArray(JNIEnv *env, const T list, int size = -1)
 
 extern "C"
 JNIEXPORT jlong JNICALL
-Java_com_lightcrafts_utils_Lensfun_init
-(JNIEnv *env, jobject obj, jstring pathStr)
+Java_com_lightcrafts_utils_LensfunNative_init
+(JNIEnv *env, jclass cls, jstring pathStr)
 {
     const auto path = env->GetStringUTFChars(pathStr, NULL);
     auto lf = new LC_lensfun(path);
@@ -59,16 +59,15 @@ Java_com_lightcrafts_utils_Lensfun_init
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_lightcrafts_utils_Lensfun_destroy
-(JNIEnv *env, jobject obj, jlong handle)
+Java_com_lightcrafts_utils_LensfunNative_destroy
+(JNIEnv *env, jclass cls, jlong handle)
 {
     // Set the Java field to zero before delete the corresponding object
-    const jclass cls = env->GetObjectClass(obj);
     const jfieldID field = env->GetFieldID(cls, "_handle", "J");
     if (!field) {
         return;
     }
-    env->SetLongField(obj, field, 0);
+    env->SetLongField(cls, field, 0);
 
     auto lf = reinterpret_cast<LC_lensfun*>(handle);
     delete lf;
@@ -76,8 +75,8 @@ Java_com_lightcrafts_utils_Lensfun_destroy
 
 extern "C"
 JNIEXPORT jobjectArray JNICALL
-Java_com_lightcrafts_utils_Lensfun_getCameraNames
-(JNIEnv *env, jobject obj, jlong handle)
+Java_com_lightcrafts_utils_LensfunNative_getCameraNames
+(JNIEnv *env, jclass cls, jlong handle)
 {
     auto lf = reinterpret_cast<LC_lensfun*>(handle);
     const auto jarr = createJArray(env, lf->getCameras());
@@ -86,8 +85,8 @@ Java_com_lightcrafts_utils_Lensfun_getCameraNames
 
 extern "C"
 JNIEXPORT jobjectArray JNICALL
-Java_com_lightcrafts_utils_Lensfun_getLensNames
-(JNIEnv *env, jobject obj, jlong handle)
+Java_com_lightcrafts_utils_LensfunNative_getLensNames
+(JNIEnv *env, jclass cls, jlong handle)
 {
     auto lf = reinterpret_cast<LC_lensfun*>(handle);
     const auto jarr = createJArray(env, lf->getLenses());
@@ -96,8 +95,8 @@ Java_com_lightcrafts_utils_Lensfun_getLensNames
 
 extern "C"
 JNIEXPORT jobjectArray JNICALL
-Java_com_lightcrafts_utils_Lensfun_getLensNamesForCamera
-(JNIEnv *env, jobject obj,
+Java_com_lightcrafts_utils_LensfunNative_getLensNamesForCamera
+(JNIEnv *env, jclass cls,
  jlong handle, jstring cameraMakerStr, jstring cameraModelStr)
 {
     auto lf = reinterpret_cast<LC_lensfun*>(handle);
@@ -131,8 +130,8 @@ Java_com_lightcrafts_utils_Lensfun_getLensNamesForCamera
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_lightcrafts_utils_Lensfun_initModifier
-(JNIEnv *env, jobject obj, jlong handle,
+Java_com_lightcrafts_utils_LensfunNative_initModifier
+(JNIEnv *env, jclass cls, jlong handle,
  jint fullWidth, jint fullHeight,
  jstring cameraMakerStr, jstring cameraModelStr,
  jstring lensMakerStr, jstring lensModelStr,
@@ -158,8 +157,8 @@ Java_com_lightcrafts_utils_Lensfun_initModifier
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_lightcrafts_utils_Lensfun_initModifierWithPoly5Lens
-  (JNIEnv *env, jobject obj,
+Java_com_lightcrafts_utils_LensfunNative_initModifierWithPoly5Lens
+  (JNIEnv *env, jclass cls,
   jlong handle,
   jint fullWidth, jint fullHeight,
   jfloat k1, jfloat k2, jfloat kr, jfloat kb,
@@ -188,8 +187,8 @@ Java_com_lightcrafts_utils_Lensfun_initModifierWithPoly5Lens
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_lightcrafts_utils_Lensfun_distortionColor
-  (JNIEnv *env, jobject obj,
+Java_com_lightcrafts_utils_LensfunNative_distortionColor
+  (JNIEnv *env, jclass cls,
   jlong handle,
   jshortArray jsrcData, jshortArray jdstData,
   jint srcRectX, jint srcRectY, jint srcRectWidth, jint srcRectHeight,
@@ -222,8 +221,8 @@ Java_com_lightcrafts_utils_Lensfun_distortionColor
 
 extern "C"
 JNIEXPORT jintArray JNICALL
-Java_com_lightcrafts_utils_Lensfun_backwardMapRect
-  (JNIEnv *env, jobject obj,
+Java_com_lightcrafts_utils_LensfunNative_backwardMapRect
+  (JNIEnv *env, jclass cls,
   jlong handle,
   jint dstRectX, jint dstRectY, jint dstRectWidth, jint dstRectHeight)
 {

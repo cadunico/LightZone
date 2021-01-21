@@ -5,7 +5,7 @@ TARGET_BASE:=		LCLENSFUN
 JNI_EXTRA_CFLAGS:=	-std=c++14
 JNI_EXTRA_PKGCFG:=	lensfun
 
-JAVAH_CLASSES:=		com.lightcrafts.utils.Lensfun
+JAVAH_CLASSES:=		com.lightcrafts.utils.LensfunNative
 
 ROOT:=			../../..
 include			../jni.mk

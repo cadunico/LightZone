@@ -8,7 +8,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.awt.*;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,13 +47,13 @@ public class Lensfun {
             }
         }
     }
-    private long _handle = init(pathName);
+    private final long _handle = LensfunNative.init(pathName);
 
     @Getter (lazy = true)
-    private final List<String> allCameraNames = Arrays.asList(getCameraNames(_handle));
+    private final List<String> allCameraNames = Arrays.asList(LensfunNative.getCameraNames(_handle));
 
     @Getter (lazy = true)
-    private final List<String> allLensNames = Arrays.asList(getLensNames(_handle));
+    private final List<String> allLensNames = Arrays.asList(LensfunNative.getLensNames(_handle));
 
     public static Lensfun updateInstance(
             String cameraMaker, String cameraModel,
@@ -74,21 +73,21 @@ public class Lensfun {
     }
 
     public void dispose() {
-        destroy(_handle);
+        LensfunNative.destroy(_handle);
         instance = null;
     }
 
     public synchronized List<String> getLensNamesFor(
             String cameraMaker, String cameraModel) {
         return Arrays.asList(
-                getLensNamesForCamera(_handle, cameraMaker, cameraModel));
+                LensfunNative.getLensNamesForCamera(_handle, cameraMaker, cameraModel));
     }
 
     public synchronized Lensfun updateModifier(int fullWidth, int fullHeight) {
         if (_fullWidth != fullWidth || _fullHeight != fullHeight ) {
             _fullWidth = fullWidth;
             _fullHeight = fullHeight;
-            initModifier(_handle, fullWidth, fullHeight,
+            LensfunNative.initModifier(_handle, fullWidth, fullHeight,
                     cameraMaker, cameraModel, lensMaker, lensModel,
                     focal, aperture);
         }
@@ -99,28 +98,10 @@ public class Lensfun {
             float k1, float k2, float kr, float kb) {
         _fullWidth = fullWidth;
         _fullHeight = fullHeight;
-        initModifierWithPoly5Lens(_handle, fullWidth, fullHeight,
+        LensfunNative.initModifierWithPoly5Lens(_handle, fullWidth, fullHeight,
                 k1, k2, kr, kb, focal, aperture);
         return instance;
     }
-
-    private native long init(String path);
-    private native void destroy(long handle);
-
-    private native String[] getCameraNames(long lfHandle);
-    private native String[] getLensNames(long lfHandle);
-    private native String[] getLensNamesForCamera(
-            long lfHandle, String cameraMaker, String cameraModel);
-
-    private native void initModifier(long lfHandle, int fullWidth, int fullHeight,
-                                     String cameraMaker, String cameraModel,
-                                     String lensMaker, String lensModel,
-                                     float focal, float aperture);
-
-    private native void initModifierWithPoly5Lens(long lfHandle,
-                                                  int fullWidth, int fullHeight,
-                                                  float k1, float k2, float kr, float kb,
-                                                  float focal, float aperture);
 
     //
     // Used by DistortionOpImage
@@ -134,7 +115,7 @@ public class Lensfun {
             int srcROffset, int srcGOffset, int srcBOffset,
             int dstROffset, int dstGOffset, int dstBOffset,
             int srcLineStride, int dstLineStride) {
-        distortionColor(
+        LensfunNative.distortionColor(
                 _handle,
                 srcData, dstData,
                 srcRectX, srcRectY, srcRectWidth, srcRectHeight,
@@ -146,22 +127,8 @@ public class Lensfun {
     }
 
     public Rectangle backwardMapRect(Rectangle destRect) {
-        final int[] srcRect = backwardMapRect(_handle,
+        final int[] srcRect = LensfunNative.backwardMapRect(_handle,
                 destRect.x, destRect.y, destRect.width, destRect.height);
         return new Rectangle(srcRect[0], srcRect[1], srcRect[2], srcRect[3]);
     }
-
-    private native void distortionColor(
-            long lfHandle,
-            short[] srcData, short[] dstData,
-            int srcRectX, int srcRectY, int srcRectWidth, int srcRectHeight,
-            int dstRectX, int dstRectY, int dstRectWidth, int dstRectHeight,
-            int srcPixelStride, int dstPixelStride,
-            int srcROffset, int srcGOffset, int srcBOffset,
-            int dstROffset, int dstGOffset, int dstBOffset,
-            int srcLineStride, int dstLineStride);
-
-    private native int[] backwardMapRect(
-            long lfHandle,
-            int dstRectX, int dstRectY, int dstRectWidth, int dstRectHeight);
 }

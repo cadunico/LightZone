@@ -11,4 +11,8 @@ package com.lightcrafts.utils;
  */
 public class Segment {
     synchronized public static native byte[] segmentImage(byte[] image, int channels, int height, int width);
+
+    static {
+        System.loadLibrary("Segment");
+    }
 }
