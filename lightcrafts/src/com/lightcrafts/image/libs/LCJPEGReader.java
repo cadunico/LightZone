@@ -21,6 +21,7 @@ import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
 import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.PlanarImage;
 
@@ -42,27 +43,13 @@ import static com.lightcrafts.jai.JAIContext.sRGBColorSpace;
  */
 public final class LCJPEGReader implements LCImageReader {
 
+    private final LCJPEGReaderNative jpegReaderNative = new LCJPEGReaderNative();
+
     /**
      * The default buffer size for use with {@link #LCJPEGReader(LCImageDataProvider).
      */
     private static final int DEFAULT_BUF_SIZE = 32 * 1024;
 
-    static {
-        System.loadLibrary("LCJPEG");
-    }
-
-    /**
-     * The number of colors per pixel. This is set from native code.
-     */
-    @SuppressWarnings({"UNUSED_SYMBOL"})
-    private int m_colorsPerPixel;
-    /**
-     * The colorspace of the image, one of: <code>CS_GRAYSCALE</code>, <code>CS_RGB</code>, <code>
-     * CS_YCbRr</code>, <code>CS_CMYK</code>, <code>CS_YCCK</code>, or <code>CS_UNKNOWN</code>. This
-     * is set from native code.
-     */
-    @SuppressWarnings({"UNUSED_SYMBOL"})
-    private int m_colorSpace;
     /**
      * This is <code>true</code> only if the JPEG file has an Adobe (APPE) segment.
      */
@@ -74,25 +61,9 @@ public final class LCJPEGReader implements LCImageReader {
     private boolean m_hasAdobeEmbedMarker;
 
     /**
-     * The image height. This is set from native code.
-     */
-    @SuppressWarnings({"UNUSED_SYMBOL"})
-    private int m_height;
-    /**
      * The actual end-result image.
      */
     private PlanarImage m_image;
-    /**
-     * This is where the native code stores a pointer to the <code>JPEG</code> native data
-     * structure. Do not touch this from Java except to compare it to zero.
-     */
-    @SuppressWarnings({"UNUSED_SYMBOL"})
-    private long m_nativePtr;
-    /**
-     * The image width. This is set from native code.
-     */
-    @SuppressWarnings({"UNUSED_SYMBOL"})
-    private int m_width;
 
     /**
      * Construct an <code>LCJPEGReader</code>.
@@ -149,7 +120,7 @@ public final class LCJPEGReader implements LCImageReader {
      */
     public LCJPEGReader(LCImageDataProvider provider, int maxWidth, int maxHeight)
             throws LCImageLibException {
-        beginRead(provider, DEFAULT_BUF_SIZE, maxWidth, maxHeight);
+        jpegReaderNative.beginRead(provider, DEFAULT_BUF_SIZE, maxWidth, maxHeight);
     }
 
     /**
@@ -159,7 +130,7 @@ public final class LCJPEGReader implements LCImageReader {
      * @param bufSize The size of the buffer (in bytes) to use.
      */
     public LCJPEGReader(LCImageDataProvider provider, int bufSize) throws LCImageLibException {
-        beginRead(provider, bufSize, 0, 0);
+        jpegReaderNative.beginRead(provider, bufSize, 0, 0);
     }
 
     /**
@@ -174,13 +145,8 @@ public final class LCJPEGReader implements LCImageReader {
      */
     public LCJPEGReader(LCImageDataProvider provider, int bufSize, int maxWidth, int maxHeight)
             throws LCImageLibException {
-        beginRead(provider, bufSize, maxWidth, maxHeight);
+        jpegReaderNative.beginRead(provider, bufSize, maxWidth, maxHeight);
     }
-
-    /**
-     * Dispose of an <code>LCJPEGReader</code>.
-     */
-    public native void dispose() throws LCImageLibException;
 
     /**
      * Gets the number of color components per pixel.
@@ -188,7 +154,7 @@ public final class LCJPEGReader implements LCImageReader {
      * @return Returns said number.
      */
     public int getColorsPerPixel() {
-        return m_colorsPerPixel;
+        return jpegReaderNative.m_colorsPerPixel;
     }
 
     /**
@@ -199,7 +165,7 @@ public final class LCJPEGReader implements LCImageReader {
      * <code>CS_CMYK</code>, <code>CS_YCCK</code>, or <code>CS_UNKNOWN</code>.
      */
     public int getColorSpace() {
-        return m_colorSpace;
+        return jpegReaderNative.m_colorSpace;
     }
 
     /**
@@ -208,7 +174,7 @@ public final class LCJPEGReader implements LCImageReader {
      * @return Returns said height.
      */
     public int getHeight() {
-        return m_height;
+        return jpegReaderNative.m_height;
     }
 
     /**
@@ -272,19 +238,8 @@ public final class LCJPEGReader implements LCImageReader {
      * @return Returns said width.
      */
     public int getWidth() {
-        return m_width;
+        return jpegReaderNative.m_width;
     }
-
-    /**
-     * Reads and decodes and encoded set of scanlines from the JPEG image.
-     *
-     * @param buf The buffer into which to read the image data.
-     * @param offset The offset into the buffer where the image data will begin being placed.
-     * @param numLines The number of scanlines to read.
-     * @return Returns the number of scanlines read.
-     */
-    public synchronized native int readScanLines(byte[] buf, long offset, int numLines)
-            throws LCImageLibException;
 
     /**
      * Finalize this class by calling {@link #dispose()}.
@@ -293,20 +248,6 @@ public final class LCJPEGReader implements LCImageReader {
         super.finalize();
         dispose();
     }
-
-    /**
-     * Begin using the {@link LCImageDataProvider} to get JPEG image data.
-     *
-     * @param provider The {@link LCImageDataProvider} to get image data from.
-     * @param bufSize The size of the buffer to use.
-     * @param maxWidth The maximum width of the image to get, rescaling if necessary. A value of 0
-     * means don't scale.
-     * @param maxHeight The maximum height of the image to get, rescaling if necessary. A value of 0
-     * means don't scale.
-     */
-    private native void beginRead(
-            LCImageDataProvider provider, int bufSize, int maxWidth, int maxHeight)
-            throws LCImageLibException;
 
     /**
      * Open a JPEG file for reading.
@@ -318,13 +259,10 @@ public final class LCJPEGReader implements LCImageReader {
      * means don't scale.
      */
     private void openForReading(String fileName, int maxWidth, int maxHeight)
-            throws FileNotFoundException, LCImageLibException, UnsupportedEncodingException {
-        byte[] fileNameUtf8 = (fileName + '\000').getBytes("UTF-8");
-        openForReading(fileNameUtf8, maxWidth, maxHeight);
+            throws FileNotFoundException, LCImageLibException {
+        byte[] fileNameUtf8 = (fileName + '\000').getBytes(StandardCharsets.UTF_8);
+        jpegReaderNative.openForReading(fileNameUtf8, maxWidth, maxHeight);
     }
-
-    private native void openForReading(byte[] fileNameUtf8, int maxWidth, int maxHeight)
-            throws FileNotFoundException, LCImageLibException;
 
     /**
      * Reads the JPEG image.
@@ -334,15 +272,15 @@ public final class LCJPEGReader implements LCImageReader {
      */
     private void readImage(ProgressThread thread, ColorSpace cs)
             throws LCImageLibException, UserCanceledException {
-        final ProgressIndicator indicator = ProgressIndicatorFactory.create(thread, m_height);
+        final ProgressIndicator indicator = ProgressIndicatorFactory.create(thread, jpegReaderNative.m_height);
 
         // todo: deal with color models other than rgb and grayscale
 
         if (cs == null) {
             cs =
-                    (m_colorsPerPixel == 1
+                    (jpegReaderNative.m_colorsPerPixel == 1
                             ? gray22ColorSpace
-                            : m_colorsPerPixel == 3 ? sRGBColorSpace : CMYKColorSpace);
+                            : jpegReaderNative.m_colorsPerPixel == 3 ? sRGBColorSpace : CMYKColorSpace);
         }
 
         // Color model for the image (and everything else).
@@ -352,45 +290,45 @@ public final class LCJPEGReader implements LCImageReader {
 
         // Sample model for the readout buffer large enough to hold a tile or a
         // strip of the image.
-        final SampleModel jpegTsm = ccm.createCompatibleSampleModel(m_width, TILE_HEIGHT);
+        final SampleModel jpegTsm = ccm.createCompatibleSampleModel(jpegReaderNative.m_width, TILE_HEIGHT);
 
         // The readout buffer itself.
-        final DataBuffer db = new DataBufferByte(m_colorsPerPixel * m_width * TILE_HEIGHT);
+        final DataBufferByte db = new DataBufferByte(jpegReaderNative.m_colorsPerPixel * jpegReaderNative.m_width * TILE_HEIGHT);
 
         // Sample model for the output image.
         final SampleModel tsm = ccm.createCompatibleSampleModel(TILE_WIDTH, TILE_HEIGHT);
 
         // Layout of the output image.
         final ImageLayout layout =
-                new ImageLayout(0, 0, m_width, m_height, 0, 0, TILE_WIDTH, TILE_HEIGHT, tsm, ccm);
+                new ImageLayout(0, 0, jpegReaderNative.m_width, jpegReaderNative.m_height, 0, 0, TILE_WIDTH, TILE_HEIGHT, tsm, ccm);
 
         // The output image itself, directly allocated in the file cache.
         final CachedImage image = new CachedImage(layout, fileCache);
 
         // Load Image Data
-        for (int tileY = 0, totalLinesRead = 0; totalLinesRead < m_height; tileY++) {
+        for (int tileY = 0, totalLinesRead = 0; totalLinesRead < jpegReaderNative.m_height; tileY++) {
             if (thread != null && thread.isCanceled()) {
                 throw new UserCanceledException();
             }
 
-            final int tileHeight = Math.min(TILE_HEIGHT, m_height - totalLinesRead);
+            final int tileHeight = Math.min(TILE_HEIGHT, jpegReaderNative.m_height - totalLinesRead);
 
             // Wrap the data buffer with a Raster representing the input data.
             final WritableRaster raster =
                     Raster.createWritableRaster(jpegTsm, db, new Point(0, tileY * TILE_HEIGHT));
 
-            final int linesRead = readScanLines(((DataBufferByte) db).getData(), 0, tileHeight);
+            final int linesRead = jpegReaderNative.readScanLines(db.getData(), 0, tileHeight);
             if (linesRead <= 0) {
                 System.out.println("Problem with readScanLines, returned: " + linesRead);
                 break;
             }
 
-            if (m_hasAdobeSegment && m_colorsPerPixel == 4 && !m_hasAdobeEmbedMarker) {
+            if (m_hasAdobeSegment && jpegReaderNative.m_colorsPerPixel == 4 && !m_hasAdobeEmbedMarker) {
                 //
                 // CMYK JPEG images generated by Photoshop are inverted, so we
                 // have to invert the data to make it look right.
                 //
-                LCImageLibUtil.invert((DataBufferByte) db);
+                LCImageLibUtil.invert(db);
             }
 
             totalLinesRead += linesRead;
@@ -400,6 +338,10 @@ public final class LCJPEGReader implements LCImageReader {
         }
         indicator.setIndeterminate(true);
         m_image = image;
+    }
+
+    public void dispose() throws LCImageLibException {
+        jpegReaderNative.dispose();
     }
 }
 /* vim:set et sw=4 ts=4: */

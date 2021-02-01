@@ -27,6 +27,7 @@ import java.awt.image.RenderedImage;
 import java.awt.image.WritableRaster;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import javax.media.jai.PlanarImage;
 import org.w3c.dom.Document;
 
@@ -52,9 +53,7 @@ import static com.lightcrafts.image.types.JPEGConstants.JPEG_MAX_SEGMENT_SIZE;
  */
 public final class LCJPEGWriter {
 
-    static {
-        System.loadLibrary("LCJPEG");
-    }
+    private final LCJPEGWriterNative jpegWriterNative = new LCJPEGWriterNative();
 
     /**
      * The height of the image as exported.
@@ -72,12 +71,6 @@ public final class LCJPEGWriter {
      * The resolution unit of the image as exported.
      */
     private final int m_resolutionUnit;
-    /**
-     * This is where the native code stores a pointer to the <code>JPEG</code> native data
-     * structure.  Do not touch this from Java except to compare it to zero.
-     */
-    @SuppressWarnings({"UNUSED_SYMBOL"})
-    private long m_nativePtr;
 
     /**
      * Construct an <code>LCJPEGWriter</code>.
@@ -130,7 +123,7 @@ public final class LCJPEGWriter {
         m_exportHeight = height;
         m_resolution = ResolutionOption.DEFAULT_VALUE;
         m_resolutionUnit = ResolutionUnitOption.DEFAULT_VALUE;
-        beginWrite(
+        jpegWriterNative.beginWrite(
                 receiver, bufSize, width, height, colorsPerPixel, colorSpace,
                 quality
         );
@@ -155,11 +148,6 @@ public final class LCJPEGWriter {
                 return CS_UNKNOWN;
         }
     }
-
-    /**
-     * Dispose of an <code>LCJPEGWriter</code>.
-     */
-    public native void dispose();
 
     /**
      * Puts an image, compressing it into a JPEG.
@@ -217,19 +205,19 @@ public final class LCJPEGWriter {
             final byte[] exifSegBuf =
                     EXIFEncoder.encode(metadata, true).array();
             //ByteBufferUtil.dumpToFile(exifBuf, "/tmp/jpg.exif");
-            writeSegment(JPEG_APP1_MARKER, exifSegBuf);
+            jpegWriterNative.writeSegment(JPEG_APP1_MARKER, exifSegBuf);
         }
 
         final Document xmpDoc = metadata.toXMP(false, true);
         final byte[] xmpSegBuf = XMLUtil.encodeDocument(xmpDoc, true);
-        writeSegment(JPEG_APP1_MARKER, xmpSegBuf);
+        jpegWriterNative.writeSegment(JPEG_APP1_MARKER, xmpSegBuf);
 
         final ImageMetadataDirectory iptcDir =
                 metadata.getDirectoryFor(IPTCDirectory.class);
         if (iptcDir != null) {
             final byte[] iptcSegBuf = ((IPTCDirectory) iptcDir).encode(true);
             if (iptcSegBuf != null) {
-                writeSegment(JPEG_APPD_MARKER, iptcSegBuf);
+                jpegWriterNative.writeSegment(JPEG_APPD_MARKER, iptcSegBuf);
             }
         }
     }
@@ -273,59 +261,18 @@ public final class LCJPEGWriter {
                     iccProfileData, i * chunkSize,
                     segSize - ICC_PROFILE_HEADER_SIZE
             );
-            writeSegment(JPEG_APP2_MARKER, buf.array());
+            jpegWriterNative.writeSegment(JPEG_APP2_MARKER, buf.array());
             totalSize -= JPEG_MAX_SEGMENT_SIZE;
         }
     }
 
     /**
-     * Compresses and writes a raw set of scanlines to the JPEG image.
-     *
-     * @param buf The buffer from which to compress the image data.
-     * @param offset The offset into the buffer where the image data will begin being read.
-     * @param numLines The number of scanlines to compress.
-     * @return Returns the number of scanlines written.
-     */
-    public native synchronized int writeScanLines(byte[] buf, int offset,
-            int numLines,
-            int lineStride)
-            throws LCImageLibException;
-
-    /**
-     * Write an APP segment to the JPEG file.
-     *
-     * @param marker The APP segment marker.
-     * @param buf The buffer comprising the raw binary contents for the segment.
-     */
-    public native void writeSegment(int marker, byte[] buf)
-            throws LCImageLibException;
-
-    /**
-     * Finalize this class by calling {@link #dispose()}.
+     * Finalize this class by calling {@link LCJPEGWriterNative#dispose()}.
      */
     protected void finalize() throws Throwable {
         dispose();
         super.finalize();
     }
-
-    /**
-     * Begin using the {@link LCImageDataProvider} to get JPEG image data.
-     *
-     * @param receiver The {@link LCImageDataReceiver} to send image data to.
-     * @param bufSize The size of the buffer (in bytes) to use.
-     * @param width The width of the image in pixels.
-     * @param height The height of the image in pixels.
-     * @param colorsPerPixel The number of color components per pixel.
-     * @param colorSpace The colorspace of the input image; must be one of {@link
-     * LCJPEGConstants#CS_GRAYSCALE}, {@link LCJPEGConstants#CS_RGB}, {@link
-     * LCJPEGConstants#CS_YCbRr}, {@link LCJPEGConstants#CS_CMYK}, or {@link
-     * LCJPEGConstants#CS_YCCK}.
-     * @param quality Image quality: 0-100.
-     */
-    private native void beginWrite(LCImageDataReceiver receiver, int bufSize,
-            int width, int height, int colorsPerPixel,
-            int colorSpace, int quality)
-            throws LCImageLibException;
 
     /**
      * Opens a JPEG file for writing.
@@ -344,16 +291,11 @@ public final class LCJPEGWriter {
             int colorsPerPixel, int colorSpace,
             int quality)
             throws IOException, LCImageLibException {
-        byte[] fileNameUtf8 = (fileName + '\000').getBytes("UTF-8");
-        openForWriting(
+        byte[] fileNameUtf8 = (fileName + '\000').getBytes(StandardCharsets.UTF_8);
+        jpegWriterNative.openForWriting(
                 fileNameUtf8, width, height, colorsPerPixel, colorSpace, quality
         );
     }
-
-    private native void openForWriting(byte[] fileNameUtf8, int width, int height,
-            int colorsPerPixel, int colorSpace,
-            int quality)
-            throws IOException, LCImageLibException;
 
     /**
      * Writes an Adobe (APPE) segment.  The bytes of an Adobe segment are:
@@ -423,7 +365,7 @@ public final class LCJPEGWriter {
         buf.putShort((short) 0);       // flags0
         buf.putShort((short) 0);       // flags1
         buf.put(colorTransformationCode);
-        writeSegment(JPEG_APPE_MARKER, buf.array());
+        jpegWriterNative.writeSegment(JPEG_APPE_MARKER, buf.array());
     }
 
     /**
@@ -482,7 +424,7 @@ public final class LCJPEGWriter {
             }
 
             final int lineStride = csm.getScanlineStride();
-            final int written = writeScanLines(db.getData(), offset, currentStripHeight,
+            final int written = jpegWriterNative.writeScanLines(db.getData(), offset, currentStripHeight,
                     lineStride);
             if (written != currentStripHeight) {
                 throw new LCImageLibException(
@@ -491,6 +433,14 @@ public final class LCJPEGWriter {
             indicator.incrementBy(currentStripHeight);
         }
         indicator.setIndeterminate(true);
+    }
+
+    public void writeSegment(int marker, byte[] buf) throws LCImageLibException {
+        jpegWriterNative.writeSegment(marker, buf);
+    }
+
+    public void dispose() throws LCImageLibException {
+        jpegWriterNative.dispose();
     }
 }
 /* vim:set et sw=4 ts=4: */

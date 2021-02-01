@@ -1706,7 +1706,7 @@ public class Application {
 
     private static void verifyLibraries() {
         String[] libs = new String[] {
-            "JAI", "FASTJAI", "fbf", "LCJPEG", "LCTIFF"
+            "JAI", "FASTJAI", "fbf", "LCTIFF"
         };
         for (String lib : libs) {
             try {

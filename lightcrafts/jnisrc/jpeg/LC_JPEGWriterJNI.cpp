@@ -19,7 +19,7 @@ extern "C" {
 #include "LC_source_mgr.h"
 #include "util.h"
 #ifndef AUTO_DEP
-#include "javah/com_lightcrafts_image_libs_LCJPEGWriter.h"
+#include "javah/com_lightcrafts_image_libs_LCJPEGWriterNative.h"
 #endif
 
 using namespace std;
@@ -37,10 +37,10 @@ inline LC_JPEGWriter* getNativePtr( JNIEnv *env, jobject jLCJPEGWriter ) {
 ////////// JNI ////////////////////////////////////////////////////////////////
 
 #define LCJPEGWriter_METHOD(method) \
-        name4(Java_,com_lightcrafts_image_libs_LCJPEGWriter,_,method)
+        name4(Java_,com_lightcrafts_image_libs_LCJPEGWriterNative,_,method)
 
 #define LCJPEGWriter_CONSTANT(constant) \
-        name3(com_lightcrafts_image_libs_LCJPEGWriter,_,constant)
+        name3(com_lightcrafts_image_libs_LCJPEGWriterNative,_,constant)
 
 /**
  * Begin using the given LCImageDataReceiver to get image data.

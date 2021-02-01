@@ -20,7 +20,7 @@ extern "C" {
 #include "LC_source_mgr.h"
 #include "util.h"
 #ifndef AUTO_DEP
-#include "javah/com_lightcrafts_image_libs_LCJPEGReader.h"
+#include "javah/com_lightcrafts_image_libs_LCJPEGReaderNative.h"
 #endif
 
 using namespace std;
@@ -38,10 +38,10 @@ inline LC_JPEGReader* getNativePtr( JNIEnv *env, jobject jLCJPEGReader ) {
 ////////// JNI ////////////////////////////////////////////////////////////////
 
 #define LCJPEGReader_METHOD(method) \
-        name4(Java_,com_lightcrafts_image_libs_LCJPEGReader,_,method)
+        name4(Java_,com_lightcrafts_image_libs_LCJPEGReaderNative,_,method)
 
 #define LCJPEGReader_CONSTANT(constant) \
-        name3(com_lightcrafts_image_libs_LCJPEGReader,_,constant)
+        name3(com_lightcrafts_image_libs_LCJPEGReaderNative,_,constant)
 
 /**
  * Begin using the given LCImageDataProvider to get image data.

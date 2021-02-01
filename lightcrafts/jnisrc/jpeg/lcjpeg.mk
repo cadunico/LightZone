@@ -13,8 +13,8 @@ JNI_MACOSX_LINK:=	../jniutils/libLCJNI.a
 JNI_MACOSX_LDFLAGS:=	-L/usr/local/opt/jpeg-turbo/lib
 JNI_MACOSX_INCLUDES:=	-I/usr/local/opt/jpeg-turbo/include
 
-JAVAH_CLASSES:=		com.lightcrafts.image.libs.LCJPEGReader \
-			com.lightcrafts.image.libs.LCJPEGWriter
+JAVAH_CLASSES:=		com.lightcrafts.image.libs.LCJPEGReaderNative \
+			com.lightcrafts.image.libs.LCJPEGWriterNative
 
 ROOT:=		../../..
 include			../jni.mk
