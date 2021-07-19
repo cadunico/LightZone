@@ -1,4 +1,5 @@
 # LightZone
+<Button color="primary" href="https://github.com/ktgw0316/LightZone/releases" size="lg">Download Versions</Button>
 [![Build status](https://ci.appveyor.com/api/projects/status/github/ktgw0316/LightZone?branch=testing?svg=true)](https://ci.appveyor.com/project/ktgw0316/lightzone/branch/testing)
 
 LightZone (www.lightzoneproject.org) is a professional-level digital darkroom and photo editor for Mac, Windows, and Linux. It includes RAW processing and editing. Rather than using layers in the way that other photo editors do, LightZone lets the user build up a stack of tools which can be rearranged, readjusted, turned off and on, and removed  from the stack.  It's a completely non-destructive editor, where any of the tools can be re-adjusted or modified later — even in a different editing session. A tool stack can even be copied to a batch of photos at one time. LightZone always operates in a 16-bit linear color space with the wide gamut of ProPhoto RGB.
